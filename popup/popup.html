@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Toplu Mesaj Gönderici</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📱 WhatsApp Toplu Mesaj</h1>
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot"></span>
+        <span id="statusText">Hazır</span>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="dashboard">📊 Panel</button>
+      <button class="tab-btn" data-tab="contacts">👥 Kişiler</button>
+      <button class="tab-btn" data-tab="messages">💬 Mesajlar</button>
+      <button class="tab-btn" data-tab="schedule">⏰ Zamanlama</button>
+      <button class="tab-btn" data-tab="settings">⚙️ Ayarlar</button>
+    </nav>
+
+    <!-- Dashboard Tab -->
+    <div class="tab-content active" id="dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-value" id="totalContacts">0</div>
+            <div class="stat-label">Toplam Kişi</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="sentToday">0</div>
+            <div class="stat-label">Bugün Gönderilen</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info">
+            <div class="stat-value" id="pending">0</div>
+            <div class="stat-label">Bekleyen</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">❌</div>
+          <div class="stat-info">
+            <div class="stat-value" id="failed">0</div>
+            <div class="stat-label">Başarısız</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <h3>Gönderim İlerlemesi</h3>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <p class="progress-text" id="progressText">0 / 0 mesaj gönderildi</p>
+      </div>
+
+      <div class="control-buttons">
+        <button class="btn btn-primary" id="startCampaign">🚀 Kampanyayı Başlat</button>
+        <button class="btn btn-warning" id="pauseCampaign" disabled>⏸️ Duraklat</button>
+        <button class="btn btn-danger" id="stopCampaign" disabled>⏹️ Durdur</button>
+      </div>
+
+      <div class="logs-section">
+        <h3>Son Aktiviteler</h3>
+        <div class="logs" id="logs">
+          <p class="log-item">Sistem hazır...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contacts Tab -->
+    <div class="tab-content" id="contacts">
+      <div class="section-header">
+        <h2>Kişi Yönetimi</h2>
+        <button class="btn btn-primary" id="importCSV">📥 CSV İçe Aktar</button>
+      </div>
+
+      <div class="add-contact-form">
+        <input type="text" id="contactName" placeholder="İsim" class="input">
+        <input type="text" id="contactPhone" placeholder="Telefon (+905551234567)" class="input">
+        <input type="text" id="contactVar1" placeholder="Değişken 1 (opsiyonel)" class="input">
+        <input type="text" id="contactVar2" placeholder="Değişken 2 (opsiyonel)" class="input">
+        <button class="btn btn-success" id="addContact">➕ Kişi Ekle</button>
+      </div>
+
+      <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+
+      <div class="contacts-list" id="contactsList">
+        <!-- Kişiler buraya dinamik olarak eklenecek -->
+      </div>
+    </div>
+
+    <!-- Messages Tab -->
+    <div class="tab-content" id="messages">
+      <div class="section-header">
+        <h2>Mesaj Şablonları</h2>
+        <button class="btn btn-primary" id="addTemplate">➕ Şablon Ekle</button>
+      </div>
+
+      <div class="message-info">
+        <p>💡 Değişkenler: {isim}, {tarih}, {saat}, {var1}, {var2}</p>
+      </div>
+
+      <div class="templates-list" id="templatesList">
+        <!-- Şablonlar buraya dinamik olarak eklenecek -->
+      </div>
+
+      <div class="template-form" id="templateForm" style="display: none;">
+        <h3>Yeni Mesaj Şablonu</h3>
+        <textarea id="templateText" class="textarea" placeholder="Mesajınızı yazın... 
+
+Örnek:
+Merhaba {isim}, bugün {tarih} tarihinde size özel fırsatlarımız var!"></textarea>
+        <div class="form-buttons">
+          <button class="btn btn-success" id="saveTemplate">💾 Kaydet</button>
+          <button class="btn btn-secondary" id="cancelTemplate">❌ İptal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Tab -->
+    <div class="tab-content" id="schedule">
+      <h2>Kampanya Zamanlaması</h2>
+
+      <div class="schedule-settings">
+        <div class="setting-group">
+          <label>Mesai Saatleri</label>
+          <div class="time-range">
+            <input type="time" id="workStart" value="09:00" class="input">
+            <span>-</span>
+            <input type="time" id="workEnd" value="21:00" class="input">
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>Kişi Başına Günlük Mesaj Sayısı</label>
+          <div class="range-input">
+            <input type="number" id="minMessages" value="10" min="1" max="20" class="input small">
+            <span>-</span>
+            <input type="number" id="maxMessages" value="15" min="1" max="20" class="input small">
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="skipWeekends">
+            <span>Hafta sonları gönderme</span>
+          </label>
+        </div>
+
+        <div class="setting-group">
+          <label>Mesaj Dağılımı</label>
+          <select id="distributionMode" class="input">
+            <option value="even">Gün boyunca eşit dağıt</option>
+            <option value="peak">Yoğun saatlerde daha fazla</option>
+            <option value="random">Rastgele</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="saveSchedule">💾 Zamanlamayı Kaydet</button>
+      </div>
+
+      <div class="schedule-preview">
+        <h3>Önizleme</h3>
+        <div id="schedulePreview">
+          <p>Ayarlarınız kaydedildiğinde önizleme burada görünecek.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settings">
+      <h2>Sistem Ayarları</h2>
+
+      <div class="settings-section">
+        <h3>🛡️ Ban Koruma Ayarları</h3>
+        
+        <div class="setting-group">
+          <label>Mesajlar Arası Gecikme (saniye)</label>
+          <div class="range-input">
+            <input type="number" id="minDelay" value="5" min="3" max="30" class="input small">
+            <span>-</span>
+            <input type="number" id="maxDelay" value="15" min="5" max="60" class="input small">
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>Kişiler Arası Gecikme (saniye)</label>
+          <div class="range-input">
+            <input type="number" id="minContactDelay" value="3" min="2" max="20" class="input small">
+            <span>-</span>
+            <input type="number" id="maxContactDelay" value="8" min="5" max="30" class="input small">
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>Saatlik Limit (mesaj/saat)</label>
+          <input type="number" id="hourlyLimit" value="300" min="50" max="500" class="input">
+        </div>
+
+        <div class="setting-group">
+          <label>Günlük Limit (mesaj/gün)</label>
+          <input type="number" id="dailyLimit" value="5000" min="100" max="10000" class="input">
+        </div>
+
+        <div class="setting-group">
+          <label>Mola Sıklığı (her X mesajda bir)</label>
+          <input type="number" id="breakFrequency" value="100" min="50" max="200" class="input">
+        </div>
+
+        <div class="setting-group">
+          <label>Mola Süresi (dakika)</label>
+          <div class="range-input">
+            <input type="number" id="minBreak" value="2" min="1" max="10" class="input small">
+            <span>-</span>
+            <input type="number" id="maxBreak" value="5" min="2" max="15" class="input small">
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="simulateTyping" checked>
+            <span>Yazıyor simülasyonu</span>
+          </label>
+        </div>
+
+        <button class="btn btn-primary" id="saveSettings">💾 Ayarları Kaydet</button>
+      </div>
+
+      <div class="danger-zone">
+        <h3>⚠️ Tehlikeli Bölge</h3>
+        <button class="btn btn-danger" id="clearData">🗑️ Tüm Verileri Sil</button>
+        <button class="btn btn-warning" id="resetSettings">🔄 Ayarları Sıfırla</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
